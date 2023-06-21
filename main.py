@@ -1,9 +1,11 @@
 import json
+import time
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
 import datetime
 
@@ -27,21 +29,25 @@ class Day():
 
 
 def get_table_from_site(group: int) -> str:
-    grp = group
-
-    url = f'https://tulsu.ru/schedule/?search={grp}'
+    url = f'https://tulsu.ru/schedule/'
 
     driver = webdriver.Chrome()
 
     driver.get(url)
+    search_input = driver.find_element('css selector', '.search')
+    search_input.send_keys(f'{group}')
+    search_input.send_keys(Keys.ENTER)
+    time.sleep(5)
 
     table_selector = "table.schedule"  # Замените на селектор своей таблицы
     wait_time = 5000  # Замените на необходимое количество секунд
 
     try:
+
         table = WebDriverWait(driver, wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, table_selector))
         )
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         table_data = table.get_attribute("outerHTML")
         # Здесь можно добавить код для обработки и анализа данных из таблицы\
 
@@ -133,7 +139,7 @@ def load_dict(file_name: str) -> dict:
     return sche
 
 
-def update_shedule():
+def update_shedule() -> None:
     data = get_table_from_site(121111)
     soup = BeautifulSoup(data, 'html.parser')
     rows = soup.find_all('tr')
